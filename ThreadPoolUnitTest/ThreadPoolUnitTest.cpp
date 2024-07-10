@@ -1,6 +1,10 @@
-#include "pch.h"
-
 #include "CppUnitTest.h"
+
+#include <chrono>
+#include <future>
+#include <thread>
+#include <vector>
+
 #include "ThreadPool.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

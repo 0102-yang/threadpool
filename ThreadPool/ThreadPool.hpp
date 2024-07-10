@@ -1,8 +1,13 @@
 #pragma once
 
+#include <functional>
 #include <future>
 #include <mutex>
 #include <queue>
+#include <stdexcept>
+#include <thread>
+#include <type_traits>
+#include <vector>
 
 namespace thread_pool
 {
@@ -21,8 +26,7 @@ public:
 
 					{
 						std::unique_lock lock(queue_mutex_);
-						condition_.wait(lock,
-							[this] { return stop_ || !tasks_.empty(); });
+						condition_.wait(lock, [this] { return stop_ || !tasks_.empty(); });
 						if (stop_ && tasks_.empty()) {
 							return;
 						}
@@ -36,8 +40,7 @@ public:
 					catch (...) {
 					}
 				}
-			}
-			);
+			});
 		}
 	}
 
@@ -49,15 +52,12 @@ public:
 
 	ThreadPool& operator=(ThreadPool&&) = delete;
 
-	template<class F, class... Args>
-	auto Enqueue(F&& f, Args&&... args)
-		-> std::future<std::invoke_result_t<F, Args...>>
+	template <class F, class... Args>
+	auto Enqueue(F&& f, Args &&...args) -> std::future<std::invoke_result_t<F, Args...>>
 	{
 		using ReturnType = std::invoke_result_t<F, Args...>;
 
-		auto task = std::make_shared<std::packaged_task<ReturnType()>>(
-			[Func = std::forward<F>(f)] { return Func(); }
-		);
+		auto task = std::make_shared<std::packaged_task<ReturnType()>>([Func = std::forward<F>(f)] { return Func(); });
 
 		std::future<ReturnType> res = task->get_future();
 
@@ -101,4 +101,4 @@ private:
 	bool stop_ = false;
 };
 
-}
+} // namespace thread_pool
